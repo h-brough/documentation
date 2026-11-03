@@ -540,6 +540,37 @@ BS_PERTURBATIVE_SOC
 
 Add perturbative spin-orbit couplings to the bandstructure calculation.
 
+.. _bs-projections:
+
+BS_PROJECTIONS
+--------------
+
+:Type: String
+:Default: 'NONE'
+:Unit: None
+:Level: Intermediate
+:Group: BS
+:Search: :searchlink:`BS_PROJECTIONS`
+
+Band weights for bandstructure NGWF calculations
+
+Weights of each atom or pseudoatomic orbital in each band along the path, for tasks BANDSTRUCTURE and PROPERTIES_BANDSTRUCTURE, written to <root>_BS.pdos_weights. One of NONE, ATOM_MULLIKEN, ATOM_LOWDIN (Mulliken or Lowdin populations of the NGWFs on each atom), PAO_LOWDIN or PAO_MULLIKEN (projections onto the pseudoatomic orbitals of the species_cond block). See :ref:`bandstructure_pw`.
+
+.. note::
+   :collapsible: closed
+
+   :Syntax:
+
+   .. code::
+
+      BS_PROJECTIONS [Text]
+
+   :Example:
+
+   .. code::
+
+      BS_PROJECTIONS PAO_LOWDIN
+
 .. _bs-unfold:
 
 BS_UNFOLD
@@ -553,6 +584,37 @@ BS_UNFOLD
 :Search: :searchlink:`BS_UNFOLD`
 
 Number of times to unfold Brillouin zone in each lattice direction
+
+.. _bs-write-agr:
+
+BS_WRITE_AGR
+------------
+
+:Type: Boolean
+:Default: FALSE
+:Unit: None
+:Level: Intermediate
+:Group: BS
+:Search: :searchlink:`BS_WRITE_AGR`
+
+Write bandstructure NGWF bands in xmgrace format
+
+Write the bands from tasks BANDSTRUCTURE and PROPERTIES_BANDSTRUCTURE to <root>_BS.agr, in xmgrace format, as well as to <root>_BS.bands. See :ref:`bandstructure_pw`.
+
+.. note::
+   :collapsible: closed
+
+   :Syntax:
+
+   .. code::
+
+      BS_WRITE_AGR [Boolean]
+
+   :Example:
+
+   .. code::
+
+      BS_WRITE_AGR T
 
 .. _cache-limit-for-dknblks:
 
@@ -1921,7 +1983,7 @@ COND_ENERGY_RANGE
 
 Energy range of optimised cond states measured from HOMO
 
-Energy range of states that will be optimised during a conduction NGWF optimisation. This is counted as the number of states measured from the highest occupied molecular orbital (HOMO). Negative values mean this range is not used in determining the occupancy of the conduction kernel.
+Energy range of states that will be optimised during a conduction NGWF optimisation. This is counted as the number of states measured from the highest occupied molecular orbital (HOMO). Negative values mean this range is not used in determining the occupancy of the conduction kernel. For tasks BANDSTRUCTURE and PROPERTIES_BANDSTRUCTURE with COND_NUM_STATES 0, the number of bands of each spin is the largest number of ground-state eigenvalues at any k-point below the highest occupied eigenvalue (insulators) or the Fermi energy (metals) plus this range, see :ref:`bandstructure_pw`.
 
 .. note::
    :collapsible: closed
@@ -2154,7 +2216,7 @@ COND_NUM_STATES
 
 Number of conduction states to be optimised for
 
-The number of conduction states to be optimised (spin up + down). For non-spin-polarised calculations, this should be an even number.
+The number of conduction states to be optimised (spin up + down). For non-spin-polarised calculations, this should be an even number. For tasks BANDSTRUCTURE and PROPERTIES_BANDSTRUCTURE, this is the number of bands (spin up + down) at each k-point of the path; with 0, COND_ENERGY_RANGE sets the number of bands, see :ref:`bandstructure_pw`. With unprojected conduction NGWFs (COND_UNPROJECTED, or EDFT), it is the number of states of the window, including the occupied states, and with 0, COND_ENERGY_RANGE sets the window, see :ref:`cond_unprojected`.
 
 .. note::
    :collapsible: closed
@@ -2476,6 +2538,68 @@ COND_SPEC_SCISSOR_OP
 :Search: :searchlink:`COND_SPEC_SCISSOR_OP`
 
 Scissor operator for JDOS and imag. diel. fn.
+
+.. _cond-unprojected:
+
+COND_UNPROJECTED
+----------------
+
+:Type: Boolean
+:Default: FALSE
+:Unit: None
+:Level: Intermediate
+:Group: COND
+:Search: :searchlink:`COND_UNPROJECTED`
+
+Unprojected COND NGWFs for all states up to a window
+
+Optimise a single set of conduction NGWFs for all the states up to the top of a window, valence and conduction together, with the unprojected Hamiltonian, instead of the conduction states with the projected Hamiltonian and a joint valence-conduction basis. This route is always used with EDFT and for BANDSTRUCTURE; this keyword selects it for insulators with an LNV ground state. COND_NUM_STATES then counts all the states of the window, including the occupied ones, and properties (DOS, optical spectra, EELS, quantum geometric tensor) are calculated from the eigenstates of the conduction NGWFs, in files with "cond" in their names. See :ref:`cond_unprojected`.
+
+.. note::
+   :collapsible: closed
+
+   :Syntax:
+
+   .. code::
+
+      COND_UNPROJECTED [Boolean]
+
+   :Example:
+
+   .. code::
+
+      COND_UNPROJECTED : T
+
+.. _cond-window-smearing:
+
+COND_WINDOW_SMEARING
+--------------------
+
+:Type: Physical
+:Default: EDFT_SMEARING_WIDTH
+:Unit: hartree
+:Level: Intermediate
+:Group: COND
+:Search: :searchlink:`COND_WINDOW_SMEARING`
+
+Smearing at top of window of unprojected COND states
+
+With EDFT, the width of the smearing of the occupancies at the top of the window of states of the unprojected conduction NGWFs (conduction calculations, see :ref:`cond_unprojected`) or of the bandstructure NGWFs (see :ref:`bandstructure_pw`). A negative value (the default) means EDFT_SMEARING_WIDTH.
+
+.. note::
+   :collapsible: closed
+
+   :Syntax:
+
+   .. code::
+
+      COND_WINDOW_SMEARING [Physical]
+
+   :Example:
+
+   .. code::
+
+      COND_WINDOW_SMEARING : 0.1 eV
 
 .. _confined-ngwfs:
 
@@ -4187,7 +4311,7 @@ DISPERSION
 ----------
 
 :Type: String
-:Default: '4'
+:Default: '0' ('GRIMMED2' when DFTB is used)
 :Unit: None
 :Level: Basic
 :Group: None
@@ -4195,7 +4319,7 @@ DISPERSION
 
 Select dispersion correction
 
-Specifies the damping function to be used in the calculation of :ref:`dispersion` corrections: 0 -  No :ref:`dispersion` correction 1 - Damping function from Elstner [J. Chem. Phys. 114(12), 5149-5155] 2 - First damping function from Wu and Yang (I) [J. Chem. Phys. 116(2), 515-524, 2002] 3 - Second damping function from Wu and Yang (II) [J. Chem. Phys. 116(2), 515-524, 2002] 4 - Damping function of D2 correction of Grimme [ S. Grimme, J. Comput. Chem. 27(15), 1787-1799, 2006] See Proceedings of the Royal Society A 465(2103), 669-683 for more details.
+Specifies the empirical dispersion correction to be used: 0 - No dispersion correction; ELSTNER - Damping function from Elstner [J. Chem. Phys. 114(12), 5149-5155, 2001]; WUYANG1 - First damping function from Wu and Yang (I) [J. Chem. Phys. 116(2), 515-524, 2002]; WUYANG2 - Second damping function from Wu and Yang (II) [J. Chem. Phys. 116(2), 515-524, 2002]; GRIMMED2 - Damping function of D2 correction of Grimme [S. Grimme, J. Comput. Chem. 27(15), 1787-1799, 2006]. Grimme's D3 corrections (D3, D3BJ, D3M, D3MBJ, optionally with the -ATM suffix) and D4 corrections (D4, D4S, optionally with the -NOATM suffix) are available if ONETEP is compiled with -DDFTD3 and/or -DDFTD4. See Proceedings of the Royal Society A 465(2103), 669-683 and the empirical dispersion correction documentation for more details.
 
 .. note::
    :collapsible: closed
@@ -4204,13 +4328,13 @@ Specifies the damping function to be used in the calculation of :ref:`dispersion
 
    .. code::
 
-      DISPERSION [Integer]
+      DISPERSION [String]
 
    :Example:
 
    .. code::
 
-      DISPERSION 1
+      DISPERSION D3BJ
 
 .. _dma-bessel-averaging:
 
@@ -6126,6 +6250,37 @@ Indicates the precision to which the ScaLapack PDSYGVX eigensolver will reorthon
 
       eigensolver_abstol 1.0e-3
 
+.. _eigenstates-perturbative-soc:
+
+EIGENSTATES_PERTURBATIVE_SOC
+----------------------------
+
+:Type: Boolean
+:Default: FALSE
+:Unit: None
+:Level: Intermediate
+:Group: COND
+:Search: :searchlink:`EIGENSTATES_PERTURBATIVE_SOC`
+
+Perturbative spin-orbit coupling in eigenstates
+
+Add spin-orbit coupling perturbatively to the eigenstates of the valence and joint bases and of unprojected conduction NGWFs: the spinor Hamiltonian in the basis of the up and down copies of the NGWFs is diagonalised at each k-point, and the spinor states are used for the eigenvalue printout, the DOS, the .bands files, optical spectra (with the on-site PAW spin-orbit term of the velocity operator), the quantum geometric tensor and EELS. The ground state and the NGWFs are unchanged. Spin-unpolarised calculations only; not available with COND_SPEC_PRINT_MAT_ELS, SPECIES_LDOS_GROUPS or COND_SPEC_SCISSOR_OP. See :ref:`eigenstates_perturbative_soc`.
+
+.. note::
+   :collapsible: closed
+
+   :Syntax:
+
+   .. code::
+
+      EIGENSTATES_PERTURBATIVE_SOC [Boolean]
+
+   :Example:
+
+   .. code::
+
+      EIGENSTATES_PERTURBATIVE_SOC : T
+
 .. _eld-calculate:
 
 ELD_CALCULATE
@@ -7174,22 +7329,6 @@ FAST_DENSITY_FLATTEN_METHOD
 :Search: :searchlink:`FAST_DENSITY_FLATTEN_METHOD`
 
 MPI flattening method to use for fast density
-
-.. _fast-density-gpu-copy-ahead:
-
-FAST_DENSITY_GPU_COPY_AHEAD
----------------------------
-
-:Type: Boolean
-:Default: TRUE
-:Unit: None
-:Level: Expert
-:Group: None
-:Search: :searchlink:`FAST_DENSITY_GPU_COPY_AHEAD`
-
-Copy stuff to the GPU ahead of time for performance?
-
-.. _fast-density-method:
 
 FAST_DENSITY_METHOD
 -------------------
@@ -15919,6 +16058,37 @@ Sets the value of a unitless numerical parameter npts_x used in the calculation 
 
       OPENBC_PSPOT_FINETUNE_NPTS_X 500000
 
+.. _optics-write-qgt:
+
+OPTICS_WRITE_QGT
+----------------
+
+:Type: Boolean
+:Default: FALSE
+:Unit: None
+:Level: Intermediate
+:Group: COND
+:Search: :searchlink:`OPTICS_WRITE_QGT`
+
+Write the quantum geometric tensor of the occupied states
+
+Calculate the quantum geometric tensor of the occupied states, Q_ab(k), from the optical matrix elements of each basis for which optical spectra are calculated (COND_CALC_OPTICAL_SPECTRA): the quantum metric g = Re Q and the Berry curvature Omega = -2 Im Q, in bohr^2 per spin channel. The Brillouin-zone average is written to the output and the values at each k-point to <seed>_<basis>_QGT.txt. Requires COND_SPEC_CALC_MOM_MAT_ELS : T except for Gamma-point calculations of isolated systems. See :ref:`quantum_geometric_tensor`.
+
+.. note::
+   :collapsible: closed
+
+   :Syntax:
+
+   .. code::
+
+      OPTICS_WRITE_QGT [Boolean]
+
+   :Example:
+
+   .. code::
+
+      OPTICS_WRITE_QGT : T
+
 .. _output-detail:
 
 OUTPUT_DETAIL
@@ -16078,6 +16248,37 @@ Activates the Projector Augmented Wave Formalism: :ref:`paw` potentials must the
    .. code::
 
       PAW : T
+
+.. _paw-core-den-taper-gvec-frac:
+
+PAW_CORE_DEN_TAPER_GVEC_FRAC
+----------------------------
+
+:Type: Double-Precision
+:Default: -1.0
+:Unit: None
+:Level: Expert
+:Group: PAW
+:Search: :searchlink:`PAW_CORE_DEN_TAPER_GVEC_FRAC`
+
+Start of PAW pseudo-core taper as fraction of max G (<0: off)
+
+Tapers the Fourier transform of the PAW pseudo-core density smoothly (cos²) to zero between G1 = x G2 and G2, the radius of the sphere inscribed in the fine grid's reciprocal box, to remove the ringing that truncation at the box edge spreads into vacuum. This reduces the egg-box effect and improves energy/force consistency, especially with optB88-vdW and other gradient-corrected functionals in systems with vacuum. G1 is never allowed below the valence density's band limit, so the keyword has no effect at FINE_GRID_SCALE 2; use FINE_GRID_SCALE 3 or more. A negative value (the default) means no taper; otherwise the value must lie strictly between 0 and 1, and 0.8 is recommended. Where forces are needed to a few meV/Å, also converge the density kernel tightly (e.g. EDFT_COMMUTATOR_THRES 1.0e-7 Hartree).
+
+.. note::
+   :collapsible: closed
+
+   :Syntax:
+
+   .. code::
+
+      PAW_CORE_DEN_TAPER_GVEC_FRAC [Real]
+
+   :Example:
+
+   .. code::
+
+      PAW_CORE_DEN_TAPER_GVEC_FRAC 0.8
 
 .. _paw-output-detail:
 
@@ -20076,7 +20277,7 @@ TASK
 
 Type of calculation
 
-Specifies the :ref:`task` to be carried out, currently one of: SINGLEPOINT - single point energy calculation COND - Conduction NGWF optimisation calculation PROPERTIES - properties using results from a previous calculation of the ground state. PROPERTIES_COND - properties using results from a previous calculation of the conduction NGWFs. GEOMETRYOPTIMIZATION - geometry optimization using Cartesian or delocalized internal coordinates. MOLECULARDYNAMICS - molecular dynamics simulation. TRANSITIONSTATESEARCH - transition state search PHONON - a phonon frequencies and thermodynamics calculation. HUBBARDSCF - a projector-self-consistent DFT+U calculation.
+Specifies the :ref:`task` to be carried out, currently one of: SINGLEPOINT - single point energy calculation COND - Conduction NGWF optimisation calculation PROPERTIES - properties using results from a previous calculation of the ground state. PROPERTIES_COND - properties using results from a previous calculation of the conduction NGWFs. GEOMETRYOPTIMIZATION - geometry optimization using Cartesian or delocalized internal coordinates. MOLECULARDYNAMICS - molecular dynamics simulation. TRANSITIONSTATESEARCH - transition state search PHONON - a phonon frequencies and thermodynamics calculation. HUBBARDSCF - a projector-self-consistent DFT+U calculation. BANDSTRUCTURE - optimisation of NGWFs at the k-points of a bandstructure path, with k-points in PW mode (see :ref:`bandstructure_pw`). PROPERTIES_BANDSTRUCTURE - bandstructure output using results from a previous BANDSTRUCTURE calculation.
 
 .. note::
    :collapsible: closed

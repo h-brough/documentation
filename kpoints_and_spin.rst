@@ -264,7 +264,7 @@ Tight-binding (TB) mode
 =======================
 
 The tight-binding (TB) mode is designed to use fully localised NGWFs ( 
-``extended_ngwf : F F F``) and the k-point sampling is performed by augmenting
+``extend_ngwf : F F F``) and the k-point sampling is performed by augmenting
 the Hamiltonian, overlap and other matrices with k-dependent phase factors.
 
 Specifically, in the TB mode, we adopt the Bloch sum form of the Bloch function:
@@ -448,11 +448,11 @@ Hybrid and extended NGWFs
 =========================
 
 In the PW mode, NGWFs needs to be extended. This is turned on by using the 
-keyword ``extended_ngwf`` in the input file. e.g.,
+keyword ``extend_ngwf`` in the input file. e.g.,
 
 ::
 
-   extended_ngwf : T T T
+   extend_ngwf : T T T
 
 It is also possible to only allow NGWFs to be extended along certain directions,
 hence utlising the periodicity of the system **only** along those directions via
@@ -465,7 +465,7 @@ calculation with only one k-point (i.e., the :math:`\Gamma` point).
 Fixed kernel calculation
 ========================
 
-When using fully extended NGWFs (``extended_ngwf : T T T``) it is possible to 
+When using fully extended NGWFs (``extend_ngwf : T T T``) it is possible to 
 perform fixed kernel calculation where the number of NGWFs used is the same as 
 the number of **occupied** states. Since we are not optimising the density 
 kernel, this will only work with known insulators (i.e., all NGWFs are fully 
@@ -487,19 +487,55 @@ number of occupied states.
 Additional notes
 ================
 
-Currently, full Brillouin zone sampling is only tested for norm-conserving
-pseudopotentials. Here's a brief list of supported functionalities:
+Brillouin zone sampling has been tested with norm-conserving
+pseudopotentials and with PAW. The k-points can be reduced by the point
+group of the crystal with ``use_symmetry`` (see :doc:`symmetry`), and divided
+between k-point parallelisation groups with ``num_kpars``.
+
+The following are supported with more than one k-point:
 
 - Ground state energy calculation with LNV (``exact_lnv : T``) and EDFT
-  (``edft : T``). 
-- Geometry optimisation (but no cell-optimisation).
-- Parts of the properties module (e.g., charge density outputs, eigenvalue
-  outputs).
+  (``edft : T``, with any of the smearing schemes), with or without spin
+  polarisation.
+- DFT+U, with the occupancy matrices symmetrised when ``use_symmetry`` is
+  used.
+- Forces and geometry optimisation (but no cell optimisation).
+- Conduction NGWF optimisation (``task : COND``), in PW mode only.
+- Bandstructures along a path in PW mode, with NGWFs optimised at each
+  k-point of the path (tasks ``BANDSTRUCTURE`` and
+  ``PROPERTIES_BANDSTRUCTURE``, see :doc:`bandstructure_pw`).
+- In the properties module:
+
+  - charge density, spin density and potential outputs, and the electric
+    field;
+  - eigenvalue outputs, and the density of states and local density of
+    states, with the Fermi level found from the eigenvalues of all
+    k-points;
+  - Mulliken and Löwdin atomic populations, and DDEC charges;
+  - optical spectra (joint density of states and imaginary part of the
+    dielectric function) from conduction calculations, and optical matrix
+    elements for OptaDOS, including the PAW terms;
+  - EELS matrix elements for OptaDOS; with ``use_symmetry``, these are
+    unfolded onto the full k-point mesh, as OptaDOS requires.
+
+The following are not yet available with more than one k-point, and either
+stop with an error or are skipped:
+
+- kernel DIIS, Mermin and penalty-functional density kernel optimisation;
+- calculations with more than one subsystem (``species_ngwf_regions``);
+- meta-GGA functionals and other quantities that need the kinetic energy
+  density (including electron localisation descriptors);
+- LR-TDDFT, RT-TDDFT, linear-response phonons and DMFT;
+- in the properties module: Mulliken bond populations, NGWF analysis and
+  spreads, polarisation, the Hubbard-projected local density of states, the
+  bandstructure in the ground-state NGWF basis (``bs_method``) and its
+  unfolding, NBO and NPA, distributed multipole analysis, and electronic
+  transport.
 
 Keywords
 ========
 
--  ``extended_ngwf`` [Basic, bool bool bool, default ``F F F``\ ] Turn on 
+-  ``extend_ngwf`` [Basic, bool bool bool, default ``F F F``\ ] Turn on 
    extended NGWFs along the three directions.
 
 -  ``kpoint_method`` [Basic, string, default ``None``\ ] The method used to generate 
